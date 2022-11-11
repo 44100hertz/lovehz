@@ -9,6 +9,7 @@ local point = {}
 function point.init (x, y)
    return setmetatable({x=x, y=y}, point.mt)
 end
+local init = point.init
 
 function point:unpack ()
    return self.x, self.y
@@ -53,6 +54,10 @@ end
 
 function point:length ()
    return math.sqrt(self.x * self.x + self.y * self.y)
+end
+
+function point:normalize ()
+   return self / self:length()
 end
 
 function point:distance_to(other)
