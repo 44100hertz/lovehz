@@ -98,4 +98,27 @@ function deep._tostring (value, indent_level, seen, serialize)
    end
 end
 
+function deep.flatten (t)
+   return deep._flatten(t, {})
+end
+
+function deep._flatten (t, out)
+   if type(t) == 'table' then
+      for k,v in pairs(t) do
+         if type(v) == 'table' then
+            deep._flatten(v, out)
+         else
+            if out[k] and out[k] ~= t[k] then
+               error(string.format('cannot flatten conflict keyvalues:\n %s = %s and %s = %s', k, out[k], k, t[k]))
+            else
+               out[k] = v
+            end
+         end
+      end
+      return out
+   else
+      return t
+   end
+end
+
 return deep

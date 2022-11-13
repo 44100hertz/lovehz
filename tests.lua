@@ -2,6 +2,16 @@ local test = require 'tests/u-test/u-test'
 local Point2 = require 'Point2'
 local deep = require 'deep'
 
+local function deep_equal (a, b)
+   if deep.equals(a, b) then
+      return true
+   else
+      local err = string.format("Values not equal:\n%s\n%s", deep.tostring(a), deep.tostring(b))
+      return false, err
+   end
+end
+test.register_assert('deep_equal', deep_equal)
+
 test.point = function ()
   local p = Point2(2, 4)
   test.equal(p.x, 2)
@@ -34,13 +44,13 @@ test.point = function ()
 end
 
 test.deepEquals = function ()
-   test.is_true(deep.equals(true, true))
-   test.is_true(deep.equals({}, {}))
+   test.deep_equal(true, true)
+   test.deep_equal({}, {})
    test.is_false(deep.equals({}, true))
    test.is_false(deep.equals({}, {true}))
-   test.is_true(deep.equals({{}}, {{}}))
-   test.is_true(deep.equals({{1}, 1}, {{1}, 1}))
-   test.is_true(deep.equals({false}, {false}))
+   test.deep_equal({{}}, {{}})
+   test.deep_equal({{1}, 1}, {{1}, 1})
+   test.deep_equal({false}, {false})
    test.is_false(deep.equals({false}, {}))
    local t1 = {}
    local t2 = setmetatable({}, {})
@@ -71,10 +81,10 @@ test.deepToString = function ()
                hello = 'hello',
                [true] = false
    }
-   test.is_true(deep.equals(loadstring('return ' .. deep.tostring(tt))(), tt))
+   test.deep_equal(loadstring('return ' .. deep.tostring(tt))(), tt)
 
    local ttt = {{1},2,{3,{4,5},6},7}
-   test.is_true(deep.equals(loadstring('return ' .. deep.tostring(ttt))(), ttt))
+   test.deep_equal(loadstring('return ' .. deep.tostring(ttt))(), ttt)
 end
 
 test.deepSerialize = function ()
@@ -97,30 +107,30 @@ test.deepSerialize = function ()
                hello = 'hello',
                [true] = false
    }
-   test.is_true(deep.equals(loadstring('return ' .. deep.serialize(tt))(), tt))
+   test.deep_equal(loadstring('return ' .. deep.serialize(tt))(), tt)
 
    local ttt = {{1},2,{3,{4,5},6},7}
-   test.is_true(deep.equals(loadstring('return ' .. deep.serialize(ttt))(), ttt))
+   test.deep_equal(loadstring('return ' .. deep.serialize(ttt))(), ttt)
 end
 
 test.deepCopy = function ()
-   test.is_true(deep.equals(deep.copy(true), true))
-   test.is_true(deep.equals(deep.copy({}), {}))
+   test.deep_equal(deep.copy(true), true)
+   test.deep_equal(deep.copy({}), {})
    local tt = {1,
                'hello',
                ['1'] = '1',
                hello = 'hello',
                [true] = false
    }
-   test.is_true(deep.equals(deep.copy(tt), tt))
+   test.deep_equal(deep.copy(tt), tt)
    local ttt = {{1},2,{3,{4,5},6},7}
-   test.is_true(deep.equals(deep.copy(ttt), ttt))
+   test.deep_equal(deep.copy(ttt), ttt)
 
    local class = {
       inc = function (self) self.count = self.count + 1 end
    }
    local object = setmetatable({count=10}, {__index = class})
-   test.is_true(deep.equals(deep.copy(object), object))
+   test.deep_equal(deep.copy(object), object)
 
    local t = {}
    t.t = t
@@ -133,4 +143,15 @@ test.deepCopy = function ()
    t2.a = function () return 2 end
    test.equal(t1.a(), 1)
    test.equal(t2.a(), 2)
+end
+
+test.deepFlatten = function ()
+   test.deep_equal(deep.flatten(true), true)
+   test.deep_equal(deep.flatten({}), {})
+   test.deep_equal(deep.flatten({1}), {1})
+   test.deep_equal(deep.flatten({{1}}), {1})
+   test.deep_equal(deep.flatten({h = 1, {i = 2}}), {h = 1, i = 2})
+   test.deep_equal(deep.flatten({h = 1, {i = 2}, {j = 3, {k = 4}}}), {h = 1, i = 2, j = 3, k = 4})
+   test.deep_equal(deep.flatten({h = 1, {h = 1}}), {h = 1})
+   test.error_raised(function () deep.flatten({h = 1, {h = 2}}) end, 'conflict')
 end
