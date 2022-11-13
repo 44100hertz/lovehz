@@ -15,6 +15,31 @@ function deep.print (t)
   print(deep.tostring(t))
 end
 
+function deep.equals (t1, t2)
+   if type(t1) ~= type(t2) then
+      return false
+   elseif type(t1) == 'table' then
+      if getmetatable(t1) ~= getmetatable(t2) then
+         return false
+      end
+      -- First, make sure all of t1 is equal to t2
+      for k1,v1 in pairs(t1) do
+         if not deep.equals(v1, t2[k1]) then
+            return false
+         end
+      end
+      -- Second, make sure that t2 doesn't contain anything outside of t1
+      for k2,v2 in pairs(t2) do
+         if t1[k2] == nil then
+            return false
+         end
+      end
+      return true
+   else
+      return t1 == t2
+   end
+end
+
 function deep.tostring (value, indent_level, seen)
    seen = seen or {}
    indent_level = indent_level or 1

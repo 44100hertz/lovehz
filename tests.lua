@@ -33,6 +33,20 @@ test.point = function ()
   test.equal(Point2(1,1):normalize(), Point2(1/math.sqrt(2), 1/math.sqrt(2)))
 end
 
+test.deepEquals = function ()
+   test.is_true(deep.equals(true, true))
+   test.is_true(deep.equals({}, {}))
+   test.is_false(deep.equals({}, true))
+   test.is_false(deep.equals({}, {true}))
+   test.is_true(deep.equals({{}}, {{}}))
+   test.is_true(deep.equals({{1}, 1}, {{1}, 1}))
+   test.is_true(deep.equals({false}, {false}))
+   test.is_false(deep.equals({false}, {}))
+   local t1 = {}
+   local t2 = setmetatable({}, {})
+   test.is_false(deep.equals(t1, t2))
+end
+
 test.deepToString = function ()
    test.equal(deep.tostring(1), '1')
    test.equal(deep.tostring('hello'), '"hello"')
@@ -51,26 +65,14 @@ test.deepToString = function ()
    ["t"] = <<Self-referential value>>,
 }]])
 
-   test.equal(deep.tostring({1,
-                             'hello',
-                             ['1'] = '1',
-                             hello = 'hello',
-                             [true] = false,}), [[
-{
-   [1] = 1,
-   [2] = "hello",
-   ["1"] = "1",
-   [true] = false,
-   ["hello"] = "hello",
-}]])
+   local tt = {1,
+               'hello',
+               ['1'] = '1',
+               hello = 'hello',
+               [true] = false
+   }
+   test.is_true(deep.equals(loadstring('return ' .. deep.tostring(tt))(), tt))
 
-   test.equal(deep.tostring({{},{{}}}), [[
-{
-   [1] = {
-   },
-   [2] = {
-      [1] = {
-      },
-   },
-}]])
+   local ttt = {{1},2,{3,{4,5},6},7}
+   test.is_true(deep.equals(loadstring('return ' .. deep.tostring(ttt))(), ttt))
 end
