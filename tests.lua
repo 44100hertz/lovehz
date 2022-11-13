@@ -76,3 +76,29 @@ test.deepToString = function ()
    local ttt = {{1},2,{3,{4,5},6},7}
    test.is_true(deep.equals(loadstring('return ' .. deep.tostring(ttt))(), ttt))
 end
+
+test.deepSerialize = function ()
+   test.equal(deep.serialize(1), '1')
+   test.equal(deep.serialize('hello'), '"hello"')
+   test.equal(deep.serialize('\9hello\n'), '"\\9hello\\n"')
+   test.equal(deep.serialize('"hello"'), '"\\"hello\\""')
+   test.equal(deep.serialize(true), 'true')
+   test.equal(deep.serialize({}), [[
+{
+}]])
+   test.error_raised(function () deep.serialize(function () end) end, 'Cannot serialize value of type function')
+   local t = {}
+   t.t = t
+   test.error_raised(function () deep.serialize(t) end, 'Self-referential value')
+
+   local tt = {1,
+               'hello',
+               ['1'] = '1',
+               hello = 'hello',
+               [true] = false
+   }
+   test.is_true(deep.equals(loadstring('return ' .. deep.serialize(tt))(), tt))
+
+   local ttt = {{1},2,{3,{4,5},6},7}
+   test.is_true(deep.equals(loadstring('return ' .. deep.serialize(ttt))(), ttt))
+end
