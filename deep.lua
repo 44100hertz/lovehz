@@ -1,7 +1,10 @@
 local deep = {}
 
-function deep.copy (t, seen)
-   seen = seen or {}
+function deep.copy (t)
+   return deep._copy(t, {})
+end
+
+function deep._copy (t, seen)
    if type(t) == 'table' then
       if seen[t] then
          error('recursive table')
@@ -10,12 +13,10 @@ function deep.copy (t, seen)
       local dup = {}
       for k,_ in pairs(t) do
          local v = rawget(t, k)
-         dup[k] = deep.copy(v, seen)
+         dup[k] = deep._copy(v, seen)
       end
       setmetatable(dup, getmetatable(t))
       return dup
-   -- elseif type(t) == 'function' then
-   --    return loadstring(string.dump(t))
    else
       return t
    end
@@ -50,13 +51,15 @@ function deep.equals (t1, t2)
    end
 end
 
-function deep.serialize (value, indent_level, seen)
-   return deep.tostring(value, indent_level, seen, true)
+function deep.serialize (value)
+   return deep._tostring(value, 1, {}, true)
 end
 
-function deep.tostring (value, indent_level, seen, serialize)
-   seen = seen or {}
-   indent_level = indent_level or 1
+function deep.tostring (value)
+   return deep._tostring(value, 1, {}, false)
+end
+
+function deep._tostring (value, indent_level, seen, serialize)
    local indent_size = 3
    if type(value) == 'table' then
       if seen[value] then
@@ -73,8 +76,8 @@ function deep.tostring (value, indent_level, seen, serialize)
       for k,v in pairs(value) do
          lines[#lines+1] = string.format('%s[%s] = %s,',
                                          indent_string,
-                                         deep.tostring(k, indent_level+1, seen, serialize),
-                                         deep.tostring(v, indent_level+1, seen, serialize))
+                                         deep._tostring(k, indent_level+1, seen, serialize),
+                                         deep._tostring(v, indent_level+1, seen, serialize))
       end
       lines[#lines+1] = (' '):rep((indent_level-1) * indent_size) .. '}'
       return table.concat(lines, '\n')
