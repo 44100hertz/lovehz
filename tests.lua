@@ -102,3 +102,35 @@ test.deepSerialize = function ()
    local ttt = {{1},2,{3,{4,5},6},7}
    test.is_true(deep.equals(loadstring('return ' .. deep.serialize(ttt))(), ttt))
 end
+
+test.deepCopy = function ()
+   test.is_true(deep.equals(deep.copy(true), true))
+   test.is_true(deep.equals(deep.copy({}), {}))
+   local tt = {1,
+               'hello',
+               ['1'] = '1',
+               hello = 'hello',
+               [true] = false
+   }
+   test.is_true(deep.equals(deep.copy(tt), tt))
+   local ttt = {{1},2,{3,{4,5},6},7}
+   test.is_true(deep.equals(deep.copy(ttt), ttt))
+
+   local class = {
+      inc = function (self) self.count = self.count + 1 end
+   }
+   local object = setmetatable({count=10}, {__index = class})
+   test.is_true(deep.equals(deep.copy(object), object))
+
+   local t = {}
+   t.t = t
+   test.error_raised(function () deep.copy(t) end, 'recursive')
+
+   local t1 = {}
+   t1.a = function () return 1 end
+   local t2 = deep.copy(t1)
+   test.equal(t2.a(), 1)
+   t2.a = function () return 2 end
+   test.equal(t1.a(), 1)
+   test.equal(t2.a(), 2)
+end

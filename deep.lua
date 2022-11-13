@@ -1,14 +1,24 @@
 local deep = {}
 
-function deep.copy ()
-   local dup = {}
-   for k,_ in pairs(t) do
-      local v = rawget(t, k)
-      if type(v) == 'table' then v = deep.copy(v) end
-      dup[k] = v
+function deep.copy (t, seen)
+   seen = seen or {}
+   if type(t) == 'table' then
+      if seen[t] then
+         error('recursive table')
+      end
+      seen[t] = true
+      local dup = {}
+      for k,_ in pairs(t) do
+         local v = rawget(t, k)
+         dup[k] = deep.copy(v, seen)
+      end
+      setmetatable(dup, getmetatable(t))
+      return dup
+   -- elseif type(t) == 'function' then
+   --    return loadstring(string.dump(t))
+   else
+      return t
    end
-   setmetatable(dup, getmetatable(t))
-   return dup
 end
 
 function deep.print (t)
