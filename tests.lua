@@ -56,7 +56,7 @@ test.deepToString = function ()
    test.equal(deep.tostring({}), [[
 {
 }]])
-   test.equal(deep.tostring(function () end), '<<Value of type function>>')
+   test.is_not_nil(string.find(deep.tostring(function () end), 'function'))
 
    local t = {}
    t.t = t
@@ -86,7 +86,7 @@ test.deepSerialize = function ()
    test.equal(deep.serialize({}), [[
 {
 }]])
-   test.error_raised(function () deep.serialize(function () end) end, 'Cannot serialize value of type function')
+   test.error_raised(function () deep.serialize(function () end) end, 'Cannot serialize value')
    local t = {}
    t.t = t
    test.error_raised(function () deep.serialize(t) end, 'Self-referential value')
